@@ -9,35 +9,41 @@ import (
 
 func main() {
 	count := 10
-	randCh := make(chan int, count)
-	sqrCh := make(chan int, count)
-	result := make([]int, count)
+	randCh := make(chan int)
+	sqrCh := make(chan int)
 	var wg sync.WaitGroup
-	for i := range count {
-		wg.Add(3)
-		go func() {
-			createRandInt(randCh)
-			wg.Done()
-		}()
-		go func() {
-			sqr(randCh, sqrCh)
-			wg.Done()
-		}()
-		go func(i int) {
-			num := <- sqrCh
-			result[i] = num
-			wg.Done()
-		}(i)
+	wg.Add(2)
+	go func() {
+		createSlice(randCh, count)
+		wg.Done()
+	}()
+	go func() {
+		sqr(randCh, sqrCh, count)
+		wg.Done()
+	}()
+	go func() {
+		wg.Wait()
+		close(sqrCh)
+	}()
+
+	for num := range sqrCh {
+		fmt.Print(num, " ")
 	}
-
-	wg.Wait()
-	fmt.Println(result)
 }
 
-func createRandInt(ch chan int) {
-	ch <- rand.IntN(100)
+func createSlice(ch chan int, size int) {
+	sl := make([]int, size)
+	for i := range size {
+		sl[i] = rand.IntN(100)
+	}
+	for _, num := range sl {
+		ch <- num
+	}
 }
-func sqr(randCh, sqrCh chan int) {
-	num := <- randCh
-	sqrCh <- int(math.Pow(float64(num), 2))
+func sqr(randCh, sqrCh chan int, size int) {
+	for range size {
+		num := <-randCh
+		sqrCh <- int(math.Pow(float64(num), 2))
+	}
+	close(randCh)
 }
