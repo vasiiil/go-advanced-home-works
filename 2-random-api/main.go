@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"math/rand/v2"
+	"net/http"
 )
 
 func main() {
@@ -18,6 +18,6 @@ func main() {
 }
 
 func handlerRandom(w http.ResponseWriter, r *http.Request) {
-	num := rand.IntN(6)
+	num := rand.IntN(6) + 1
 	w.Write([]byte(fmt.Sprint(num)))
 }
