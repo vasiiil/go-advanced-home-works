@@ -3,6 +3,7 @@ package main
 import (
 	"api-project/configs"
 	"api-project/internal/auth"
+	"api-project/internal/verify"
 	"fmt"
 	"net/http"
 )
@@ -12,6 +13,9 @@ func main() {
 	router := http.NewServeMux()
 	auth.New(router, auth.AuthHandlerDeps{
 		Config: &conf.Auth,
+	})
+	verify.New(router, verify.EmailHandlerDeps{
+		Config: &conf.Email,
 	})
 	server := http.Server{
 		Addr:    ":8081",
