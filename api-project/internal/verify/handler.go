@@ -18,7 +18,10 @@ type EmailHandler struct {
 	Config *configs.EmailConfig
 }
 
+var verifyEmailsMap map[string]string
+
 func New(router *http.ServeMux, deps EmailHandlerDeps) {
+	verifyEmailsMap = make(map[string]string)
 	handler := &EmailHandler{
 		Config: deps.Config,
 	}
@@ -32,14 +35,14 @@ func (handler *EmailHandler) send() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		
+
 		hash := uuid.New().String()
-		
-		//TODO здесь будет сохранение хеша и емейла
-		
+		verifyEmailsMap[hash] = payload.Email
+
 		text := fmt.Sprintf("<h1>Hello, %s!</h1><p>Please, verify your email %s, following by <a href=\"http://localhost/verify/%s\">link</a></p>", payload.Name, payload.Email, hash)
 		mailer := email.New(handler.Config)
 		err = mailer.Send(handler.Config.Email, "Verifying email", text)
+		fmt.Println("Hash:", hash)
 		if err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		} else {
@@ -49,7 +52,6 @@ func (handler *EmailHandler) send() http.HandlerFunc {
 }
 func (handler *EmailHandler) verify() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// http://localhost/verify/0d04af71-4b15-4211-bb44-eff52b3dbf29
 		fmt.Println("Email verify handler")
 		hash := r.PathValue("hash")
 		if hash == "" {
@@ -57,9 +59,10 @@ func (handler *EmailHandler) verify() http.HandlerFunc {
 			return
 		}
 
-		//todo здесь ищем запись с таким хэшем
-		// пока что, пока нет базы данных, захардкодим
-		if hash == "0d04af71-4b15-4211-bb44-eff52b3dbf29" {
+		email, ok := verifyEmailsMap[hash]
+		if ok {
+			fmt.Printf("Email %s is verified\n", email)
+			delete(verifyEmailsMap, hash)
 			response.Json(w, VerifyResponse{
 				Success: true,
 			}, http.StatusOK)
@@ -67,7 +70,6 @@ func (handler *EmailHandler) verify() http.HandlerFunc {
 			response.Json(w, VerifyResponse{
 				Success: false,
 			}, http.StatusUnauthorized)
-			//todo здесь будет удаление
 		}
 	}
 }
