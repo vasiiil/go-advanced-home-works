@@ -4,12 +4,14 @@ import (
 	"api-project/configs"
 	"api-project/internal/auth"
 	"api-project/internal/verify"
+	"api-project/pkg/db"
 	"fmt"
 	"net/http"
 )
 
 func main() {
 	conf := configs.Load()
+	_ = db.New(&conf.Db)
 	router := http.NewServeMux()
 	auth.New(router, auth.AuthHandlerDeps{
 		Config: &conf.Auth,
