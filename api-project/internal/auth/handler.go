@@ -2,6 +2,7 @@ package auth
 
 import (
 	"api-project/configs"
+	"api-project/pkg/request"
 	"api-project/pkg/response"
 	"fmt"
 	"net/http"
@@ -22,9 +23,14 @@ func New(router *http.ServeMux, deps AuthHandlerDeps) {
 	router.HandleFunc("POST /auth/register", handler.register())
 }
 func (handler *AuthHandler) login() http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		payload, err := request.HandleBody[LoginRequest](&w, r)
+		if err != nil {
+			return
+		}
 		fmt.Println("Login handler")
 		fmt.Printf("Secret is: %v\n", handler.Config.Secret)
+		fmt.Println("Payload:", payload)
 		resp := LoginResponse{
 			Token: handler.Config.Secret,
 		}
@@ -32,7 +38,12 @@ func (handler *AuthHandler) login() http.HandlerFunc {
 	}
 }
 func (handler *AuthHandler) register() http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		payload, err := request.HandleBody[RegisterRequest](&w, r)
+		if err != nil {
+			return
+		}
 		fmt.Println("Register handler")
+		fmt.Println("Payload:", payload)
 	}
 }

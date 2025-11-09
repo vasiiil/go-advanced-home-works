@@ -5,8 +5,20 @@ import (
 	"net/http"
 )
 
+type ErrorResponse struct {
+	Error any `json:"error"`
+}
+
 func Json(w http.ResponseWriter, data any, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(data)
+}
+
+func BadRequestJson(w http.ResponseWriter, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	resp := ErrorResponse{
+		Error: data,
+	}
+	Json(w, resp, http.StatusBadRequest)
 }
