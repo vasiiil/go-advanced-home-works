@@ -25,14 +25,14 @@ func (repo *ProductRepository) Create(product *Product) (*Product, error) {
 	return product, nil
 }
 
-func (repo *ProductRepository) GetAll(page, pageSize int) ([]Product, error) {
+func (repo *ProductRepository) GetAll(page, pageSize int) ([]Product) {
 	var products []Product
 	result := repo.Db.Scopes(db.PaginateScope(page, pageSize)).Find(&products)
 	if result.Error != nil {
-		return nil, result.Error
+		return []Product{}
 	}
 
-	return products, nil
+	return products
 }
 
 func (repo *ProductRepository) GetById(id uint) (*Product, error) {
