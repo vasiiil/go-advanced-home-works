@@ -15,10 +15,13 @@ func Json(w http.ResponseWriter, data any, statusCode int) {
 	json.NewEncoder(w).Encode(data)
 }
 
-func BadRequestJson(w http.ResponseWriter, data any) {
-	w.Header().Set("Content-Type", "application/json")
+func JsonError(w http.ResponseWriter, err any, statusCode int) {
 	resp := ErrorResponse{
-		Error: data,
+		Error: err,
 	}
-	Json(w, resp, http.StatusBadRequest)
+	Json(w, resp, statusCode)
+}
+
+func BadRequestJson(w http.ResponseWriter, data any) {
+	JsonError(w, data, http.StatusBadRequest)
 }
