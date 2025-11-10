@@ -15,7 +15,7 @@ type AuthHandler struct {
 	Config *configs.AuthConfig
 }
 
-func New(router *http.ServeMux, deps AuthHandlerDeps) {
+func NewHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 	handler := &AuthHandler{
 		Config: deps.Config,
 	}

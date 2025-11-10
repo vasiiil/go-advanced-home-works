@@ -12,14 +12,20 @@ type Link struct {
 	Hash string `json:"hash" gorm:"uniqueIndex"`
 }
 
-func New(url string) *Link {
-	return &Link{
+func NewLink(url string) *Link {
+	link := &Link{
 		Url: url,
-		Hash: randStringRunes(10),
 	}
+	link.GenerateHash()
+	return link
+}
+
+func (link *Link) GenerateHash() {
+	link.Hash = randStringRunes(10)
 }
 
 var allowedRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
 func randStringRunes(n int) string {
 	runeSl := make([]rune, n)
 	for i := range runeSl {
