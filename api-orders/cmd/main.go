@@ -2,6 +2,7 @@ package main
 
 import (
 	"api-orders/configs"
+	"api-orders/internal/product"
 	"api-orders/pkg/db"
 	"fmt"
 	"net/http"
@@ -9,8 +10,19 @@ import (
 
 func main() {
 	conf := configs.Load()
-	_ = db.New(&conf.Db)
+	database := db.New(&conf.Db)
 	router := http.NewServeMux()
+
+	// #region Repositories
+	productRepository := product.NewRepository(database)
+	// #endregion Repositories
+
+	// #region Handlers
+	product.NewHandler(router, product.ProductHandlerDeps{
+		Repository: productRepository,
+	})
+	// #endregion Handlers
+
 	server := http.Server{
 		Addr:    ":8081",
 		Handler: router,

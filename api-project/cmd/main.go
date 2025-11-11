@@ -3,6 +3,7 @@ package main
 import (
 	"api-project/configs"
 	"api-project/internal/auth"
+	"api-project/internal/link"
 	"api-project/internal/verify"
 	"api-project/pkg/db"
 	"fmt"
@@ -11,11 +12,22 @@ import (
 
 func main() {
 	conf := configs.Load()
-	_ = db.New(&conf.Db)
+	database := db.New(&conf.Db)
 	router := http.NewServeMux()
-	auth.New(router, auth.AuthHandlerDeps{
+
+	// #region Repositories
+	linkRepository := link.NewRepository(database)
+	// #endregion Repositories
+
+	// #region Handlers
+	auth.NewHandler(router, auth.AuthHandlerDeps{
 		Config: &conf.Auth,
 	})
+	link.NewHandler(router, link.LinkHandlerDeps{
+		Repository: linkRepository,
+	})
+	// #endregion Handlers
+
 	verify.New(router, verify.EmailHandlerDeps{
 		Config: &conf.Email,
 	})
