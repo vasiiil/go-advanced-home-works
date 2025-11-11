@@ -1,9 +1,9 @@
 package link
 
 import (
+	"api-project/pkg/middleware"
 	"api-project/pkg/request"
 	"api-project/pkg/response"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -22,13 +22,12 @@ func NewHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 		Repository: deps.Repository,
 	}
 	router.HandleFunc("POST /links", handler.create())
-	router.HandleFunc("PATCH /links/{id}", handler.update())
+	router.Handle("PATCH /links/{id}", middleware.IsAuthed(handler.update()))
 	router.HandleFunc("DELETE /links/{id}", handler.delete())
 	router.HandleFunc("GET /{hash}", handler.goTo())
 }
 func (handler *LinkHandler) goTo() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Link goTo handler")
 		hash := r.PathValue("hash")
 		link, err := handler.Repository.GetByHash(hash)
 		if err != nil {
@@ -40,7 +39,6 @@ func (handler *LinkHandler) goTo() http.HandlerFunc {
 }
 func (handler *LinkHandler) create() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Link create handler")
 		body, err := request.HandleBody[LinkCreateRequest](&w, r)
 		if err != nil {
 			return
@@ -65,7 +63,6 @@ func (handler *LinkHandler) create() http.HandlerFunc {
 }
 func (handler *LinkHandler) update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Link update handler")
 		body, err := request.HandleBody[LinkUpdateRequest](&w, r)
 		if err != nil {
 			return
@@ -91,7 +88,6 @@ func (handler *LinkHandler) update() http.HandlerFunc {
 }
 func (handler *LinkHandler) delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Link delete handler")
 		idString := r.PathValue("id")
 		id, err := strconv.ParseUint(idString, 10, 32)
 		if err != nil {
