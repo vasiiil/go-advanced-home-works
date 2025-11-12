@@ -4,6 +4,7 @@ import (
 	"api-project/configs"
 	"api-project/internal/auth"
 	"api-project/internal/link"
+	"api-project/internal/user"
 	"api-project/internal/verify"
 	"api-project/pkg/db"
 	"api-project/pkg/middleware"
@@ -18,22 +19,29 @@ func main() {
 
 	// #region Repositories
 	linkRepository := link.NewRepository(database)
+	userRepository := user.NewRepository(database)
 	// #endregion Repositories
+
+	// #region Services
+	authService := auth.NewService(userRepository)
+	// #endregion Services
 
 	// #region Handlers
 	auth.NewHandler(router, auth.AuthHandlerDeps{
-		Config: &conf.Auth,
+		Config:  &conf.Auth,
+		Service: authService,
 	})
 	link.NewHandler(router, link.LinkHandlerDeps{
 		Repository: linkRepository,
 	})
 	// #endregion Handlers
 
-	// Middlewares
+	// #region Middlewares
 	stackMiddleware := middleware.Chain(
 		middleware.Cors,
 		middleware.Logging,
 	)
+	// #endregion Middlewares
 
 	verify.New(router, verify.EmailHandlerDeps{
 		Config: &conf.Email,
