@@ -1,6 +1,7 @@
 package main
 
 import (
+	"api-orders/auth"
 	"api-orders/configs"
 	"api-orders/internal/product"
 	"api-orders/pkg/db"
@@ -18,7 +19,15 @@ func main() {
 	productRepository := product.NewRepository(database)
 	// #endregion Repositories
 
+	// #region Services
+	authService := auth.NewService()
+	// #endregion Services
+
 	// #region Handlers
+	auth.NewHandler(router, auth.AuthHandlerDeps{
+		Config:  &conf.Auth,
+		Service: authService,
+	})
 	product.NewHandler(router, product.ProductHandlerDeps{
 		Repository: productRepository,
 	})
