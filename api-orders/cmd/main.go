@@ -20,7 +20,9 @@ func main() {
 	// #endregion Repositories
 
 	// #region Services
-	authService := auth.NewService()
+	authService := auth.NewService(auth.AuthServiceDeps{
+		Sms: &conf.Sms,
+	})
 	// #endregion Services
 
 	// #region Handlers

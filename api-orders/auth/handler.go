@@ -45,7 +45,12 @@ func (handler *AuthHandler) login() http.HandlerFunc {
 			return
 		}
 
-		sessionId := handler.Service.Login(body.Phone)
+		sessionId, err := handler.Service.Login(body.Phone)
+		if err != nil {
+			response.JsonError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		
 		handler.Service.PrintSessions("after login")
 		response.Json(w, LoginResponse{
 			SessionId: sessionId,
