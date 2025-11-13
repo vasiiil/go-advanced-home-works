@@ -2,6 +2,7 @@ package auth
 
 import (
 	"api-project/configs"
+	"api-project/pkg/jwt"
 	"api-project/pkg/request"
 	"api-project/pkg/response"
 	"fmt"
@@ -33,20 +34,23 @@ func (handler *AuthHandler) login() http.HandlerFunc {
 			return
 		}
 
-		fmt.Printf("Secret is: %v\n", handler.Config.Secret)
+		fmt.Printf("Secret is: %v\n", handler.Config.JwtSecret)
 		fmt.Println("Payload:", body)
 
 		email, err := handler.Service.Login(body.Email, body.Password)
 		if err != nil {
-			response.BadRequestJson(w, err.Error())
+			response.JsonError(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		// resp := LoginResponse{
-		// 	Token: handler.Config.Secret,
-		// }
+		token, err := jwt.New(handler.Config.JwtSecret).Create(email)
+		if err != nil {
+			response.JsonError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		response.Json(w, LoginResponse{
-			Token: email,
+			Token: token,
 		}, http.StatusAccepted)
 	}
 }
@@ -63,8 +67,13 @@ func (handler *AuthHandler) register() http.HandlerFunc {
 			return
 		}
 
+		token, err := jwt.New(handler.Config.JwtSecret).Create(email)
+		if err != nil {
+			response.JsonError(w, err.Error(), http.StatusInternalServerError)
+		}
+
 		response.Json(w, RegisterResponse{
-			Token: email,
+			Token: token,
 		}, http.StatusCreated)
 	}
 }
