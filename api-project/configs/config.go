@@ -11,19 +11,19 @@ type DbConfig struct {
 	Dsn string
 }
 
-type AuthConfig struct{
-	Secret string
+type AuthConfig struct {
+	JwtSecret string
 }
 
 type EmailConfig struct {
-	Email string
+	Email    string
 	Password string
-	Address string
+	Address  string
 }
 
 type Config struct {
-	Db   DbConfig
-	Auth AuthConfig
+	Db    DbConfig
+	Auth  AuthConfig
 	Email EmailConfig
 }
 
@@ -37,12 +37,12 @@ func Load() *Config {
 			Dsn: os.Getenv("DSN"),
 		},
 		Auth: AuthConfig{
-			Secret: os.Getenv("TOKEN"),
+			JwtSecret: os.Getenv("JWT_SECRET"),
 		},
 		Email: EmailConfig{
-			Email: os.Getenv("EMAIL"),
+			Email:    os.Getenv("EMAIL"),
 			Password: os.Getenv("EMAIL_PASSWORD"),
-			Address: os.Getenv("EMAIL_ADDRESS"),
+			Address:  os.Getenv("EMAIL_ADDRESS"),
 		},
 	}
 }
