@@ -52,21 +52,21 @@ func PrepareParam[T any](w *http.ResponseWriter, r *http.Request, paramSource st
 	case string:
 		return any(stringValue).(T), nil
 	case uint:
-		value, err := strconv.ParseUint(stringValue, 10, 64)
+		value, err := strconv.ParseUint(stringValue, 10, 32)
 		if err != nil {
 			response.JsonError(*w, err.Error(), http.StatusBadRequest)
 			return zeroValue, err
 		}
 		untypedValue = uint(value)
 	case int:
-		value, err := strconv.ParseInt(stringValue, 10, 64)
+		value, err := strconv.ParseInt(stringValue, 10, 32)
 		if err != nil {
 			response.JsonError(*w, err.Error(), http.StatusBadRequest)
 			return zeroValue, err
 		}
 		untypedValue = int(value)
 	case float64:
-		untypedValue, err = strconv.ParseFloat(stringValue, 64)
+		untypedValue, err = strconv.ParseFloat(stringValue, 32)
 	case bool:
 		untypedValue, err = strconv.ParseBool(stringValue)
 	default:
