@@ -4,6 +4,7 @@ import (
 	"api-orders/configs"
 	"api-orders/internal/product"
 	"api-orders/pkg/db"
+	"api-orders/pkg/middleware"
 	"fmt"
 	"net/http"
 )
@@ -23,9 +24,14 @@ func main() {
 	})
 	// #endregion Handlers
 
+	// Middlewares
+	stackMiddleware := middleware.Chain(
+		middleware.Logging,
+	)
+
 	server := http.Server{
 		Addr:    ":8081",
-		Handler: router,
+		Handler: stackMiddleware(router),
 	}
 	fmt.Println("Server is listening on port 8081")
 	server.ListenAndServe()

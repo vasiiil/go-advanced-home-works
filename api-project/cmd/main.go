@@ -6,6 +6,7 @@ import (
 	"api-project/internal/link"
 	"api-project/internal/verify"
 	"api-project/pkg/db"
+	"api-project/pkg/middleware"
 	"fmt"
 	"net/http"
 )
@@ -28,12 +29,18 @@ func main() {
 	})
 	// #endregion Handlers
 
+	// Middlewares
+	stackMiddleware := middleware.Chain(
+		middleware.Cors,
+		middleware.Logging,
+	)
+
 	verify.New(router, verify.EmailHandlerDeps{
 		Config: &conf.Email,
 	})
 	server := http.Server{
 		Addr:    ":8081",
-		Handler: router,
+		Handler: stackMiddleware(router),
 	}
 	fmt.Println("Server is listening on port 8081")
 	server.ListenAndServe()
