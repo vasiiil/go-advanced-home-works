@@ -11,8 +11,19 @@ type DbConfig struct {
 	Dsn string
 }
 
+type AuthConfig struct {
+	JwtSecret string
+}
+
+type SmsConfig struct {
+	AccountSid string
+	AuthToken  string
+}
+
 type Config struct {
-	Db DbConfig
+	Db   DbConfig
+	Auth AuthConfig
+	Sms  SmsConfig
 }
 
 func Load() *Config {
@@ -23,6 +34,13 @@ func Load() *Config {
 	return &Config{
 		Db: DbConfig{
 			Dsn: os.Getenv("DSN"),
+		},
+		Auth: AuthConfig{
+			JwtSecret: os.Getenv("JWT_SECRET"),
+		},
+		Sms: SmsConfig{
+			AccountSid: os.Getenv("TWILIO_ACCOUNT_SID"),
+			AuthToken:  os.Getenv("TWILIO_AUTH_TOKEN"),
 		},
 	}
 }
