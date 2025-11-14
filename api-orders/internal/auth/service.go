@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"api-orders/configs"
 	"api-orders/pkg/sms"
 	"fmt"
 	"math/rand/v2"
@@ -10,7 +9,7 @@ import (
 )
 
 type AuthServiceDeps struct {
-	Sms *configs.SmsConfig
+	SmsSender *sms.Sms
 }
 
 type TVerifyCode struct {
@@ -20,21 +19,20 @@ type TVerifyCode struct {
 type TVerifyCodeMap map[string]TVerifyCode
 
 type AuthService struct {
-	sms      *configs.SmsConfig
-	sessions TVerifyCodeMap
+	SmsSender *sms.Sms
+	sessions  TVerifyCodeMap
 }
 
 func NewService(deps AuthServiceDeps) *AuthService {
 	return &AuthService{
-		sms:      deps.Sms,
-		sessions: make(TVerifyCodeMap),
+		SmsSender: deps.SmsSender,
+		sessions:  make(TVerifyCodeMap),
 	}
 }
 
 func (service *AuthService) Login(phone string) (string, error) {
 	code := rand.UintN(9000) + 1000
-	smsSender := sms.New(service.sms)
-	err := smsSender.Send(phone, fmt.Sprintf("Код подтверждения: %d", code))
+	err := service.SmsSender.Send(phone, fmt.Sprintf("Код подтверждения: %d", code))
 	if err != nil {
 		return "", err
 	}
