@@ -1,9 +1,11 @@
 package link
 
 import (
+	"api-project/configs"
 	"api-project/pkg/middleware"
 	"api-project/pkg/request"
 	"api-project/pkg/response"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -12,6 +14,7 @@ import (
 
 type LinkHandlerDeps struct {
 	Repository *LinkRepository
+	Config     *configs.AuthConfig
 }
 type LinkHandler struct {
 	Repository *LinkRepository
@@ -22,7 +25,7 @@ func NewHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 		Repository: deps.Repository,
 	}
 	router.HandleFunc("POST /links", handler.create())
-	router.Handle("PATCH /links/{id}", middleware.IsAuthed(handler.update()))
+	router.Handle("PATCH /links/{id}", middleware.IsAuthed(handler.update(), deps.Config))
 	router.HandleFunc("DELETE /links/{id}", handler.delete())
 	router.HandleFunc("GET /{hash}", handler.goTo())
 }
@@ -67,15 +70,20 @@ func (handler *LinkHandler) update() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		idString := r.PathValue("id")
-		id, err := strconv.ParseUint(idString, 10, 32)
+		id, err := request.PrepareParam[uint](&w, r, "path", "id", true)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
+		contextEmail, ok := r.Context().Value(middleware.ContextEmailKey).(string)
+		if ok {
+			fmt.Println("update handler contextEmail:", contextEmail)
+		} else {
+			fmt.Println("update handler unknown contextEmail")
+		}
+
 		link, err := handler.Repository.Update(&Link{
-			Model: gorm.Model{ID: uint(id)},
+			Model: gorm.Model{ID: id},
 			Url:   body.Url,
 			Hash:  body.Hash,
 		})

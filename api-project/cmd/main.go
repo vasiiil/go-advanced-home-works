@@ -33,6 +33,7 @@ func main() {
 	})
 	link.NewHandler(router, link.LinkHandlerDeps{
 		Repository: linkRepository,
+		Config:     &conf.Auth,
 	})
 	// #endregion Handlers
 
