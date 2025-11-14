@@ -63,16 +63,13 @@ func (handler *AuthHandler) verifyCode() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		phone := handler.Service.VerifyCode(body.SessionId, body.Code)
-		if phone == "" {
+		verified := handler.Service.VerifyCode(body.SessionId, body.Code)
+		if !verified {
 			response.JsonError(w, ErrWrongVerificationCode.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		token, err := jwt.New(handler.Config.JwtSecret).Create(&jwt.JwtData{
-			SessionId: body.SessionId,
-			Phone:     phone,
-		})
+		token, err := jwt.New(handler.Config.JwtSecret).Create(body.SessionId)
 		if err != nil {
 			response.JsonError(w, err.Error(), http.StatusInternalServerError)
 			return

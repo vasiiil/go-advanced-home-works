@@ -20,7 +20,7 @@ func New(config *configs.DbConfig) *Db {
 	return &Db{db}
 }
 
-func PaginateScope(page, pageSize int) func(db *gorm.DB) *gorm.DB {
+func PaginateScope(page, pageSize uint) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if page <= 0 {
 			page = 1
@@ -32,6 +32,6 @@ func PaginateScope(page, pageSize int) func(db *gorm.DB) *gorm.DB {
 			pageSize = 10 // Default page size
 		}
 		offset := (page - 1) * pageSize
-		return db.Offset(offset).Limit(pageSize)
+		return db.Offset(int(offset)).Limit(int(pageSize))
 	}
 }
