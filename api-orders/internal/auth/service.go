@@ -13,15 +13,21 @@ type AuthServiceDeps struct {
 	Sms *configs.SmsConfig
 }
 
+type TVerifyCode struct {
+	phone string
+	code  uint16
+}
+type TVerifyCodeMap map[string]TVerifyCode
+
 type AuthService struct {
 	sms      *configs.SmsConfig
-	sessions map[string]uint16
+	sessions TVerifyCodeMap
 }
 
 func NewService(deps AuthServiceDeps) *AuthService {
 	return &AuthService{
 		sms:      deps.Sms,
-		sessions: make(map[string]uint16),
+		sessions: make(TVerifyCodeMap),
 	}
 }
 
@@ -33,22 +39,29 @@ func (service *AuthService) Login(phone string) (string, error) {
 		return "", err
 	}
 	sessionId := uuid.New().String()
-	service.sessions[sessionId] = uint16(code)
+	service.sessions[sessionId] = TVerifyCode{
+		phone: phone,
+		code:  uint16(code),
+	}
 	return sessionId, nil
 }
 
-func (service *AuthService) VerifyCode(sessionId string, code uint16) bool {
-	if !(code == service.sessions[sessionId]) {
-		return false
+func (service *AuthService) VerifyCode(sessionId string, code uint16) string {
+	sess, ok := service.sessions[sessionId]
+	if !ok {
+		return ""
+	}
+	if !(code == sess.code) {
+		return ""
 	}
 	delete(service.sessions, sessionId)
-	return true
+	return sess.phone
 }
 
 func (service *AuthService) PrintSessions(message string) {
 	fmt.Printf("#### sessions %s ####\n", message)
 	for k, v := range service.sessions {
-		fmt.Printf("%s: %d\n", k, v)
+		fmt.Printf("%s: %v\n", k, v)
 	}
 	fmt.Println()
 }

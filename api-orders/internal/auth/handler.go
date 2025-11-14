@@ -5,9 +5,9 @@ import (
 	"api-orders/pkg/jwt"
 	"api-orders/pkg/request"
 	"api-orders/pkg/response"
+	"api-orders/pkg/validators"
 	"fmt"
 	"net/http"
-	"regexp"
 )
 
 type AuthHandlerDeps struct {
@@ -35,22 +35,20 @@ func (handler *AuthHandler) login() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		matched, err := regexp.MatchString("^(7|8)?9\\d{9}$", body.Phone)
+
+		phone, err := validators.Phone(body.Phone)
 		if err != nil {
 			response.JsonError(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		if !matched {
-			response.BadRequestJson(w, "invalid phone format")
-			return
-		}
+		body.Phone = phone
 
 		sessionId, err := handler.Service.Login(body.Phone)
 		if err != nil {
 			response.JsonError(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		
+
 		handler.Service.PrintSessions("after login")
 		response.Json(w, LoginResponse{
 			SessionId: sessionId,
@@ -65,13 +63,16 @@ func (handler *AuthHandler) verifyCode() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		verified := handler.Service.VerifyCode(body.SessionId, body.Code)
-		if !verified {
+		phone := handler.Service.VerifyCode(body.SessionId, body.Code)
+		if phone == "" {
 			response.JsonError(w, ErrWrongVerificationCode.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		token, err := jwt.New(handler.Config.JwtSecret).Create(body.SessionId)
+		token, err := jwt.New(handler.Config.JwtSecret).Create(&jwt.JwtData{
+			SessionId: body.SessionId,
+			Phone:     phone,
+		})
 		if err != nil {
 			response.JsonError(w, err.Error(), http.StatusInternalServerError)
 			return
