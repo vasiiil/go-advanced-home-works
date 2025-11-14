@@ -3,7 +3,9 @@ package main
 import (
 	"api-orders/configs"
 	"api-orders/internal/auth"
+	"api-orders/internal/order"
 	"api-orders/internal/product"
+	"api-orders/internal/user"
 	"api-orders/pkg/db"
 	"api-orders/pkg/middleware"
 	"api-orders/pkg/sms"
@@ -19,11 +21,14 @@ func main() {
 
 	// #region Repositories
 	productRepository := product.NewRepository(database)
+	userRepository := user.NewRepository(database)
+	orderRepository := order.NewRepository(database)
 	// #endregion Repositories
 
 	// #region Services
 	authService := auth.NewService(auth.AuthServiceDeps{
-		SmsSender: smsSender,
+		SmsSender:      smsSender,
+		UserRepository: userRepository,
 	})
 	// #endregion Services
 
@@ -33,8 +38,14 @@ func main() {
 		Service: authService,
 	})
 	product.NewHandler(router, product.ProductHandlerDeps{
-		Repository: productRepository,
-		AuthConfig: &conf.Auth,
+		Repository:     productRepository,
+		UserRepository: userRepository,
+		AuthConfig:     &conf.Auth,
+	})
+	order.NewHandler(router, order.OrderHandlerDeps{
+		Repository:     orderRepository,
+		UserRepository: userRepository,
+		AuthConfig:     &conf.Auth,
 	})
 	// #endregion Handlers
 

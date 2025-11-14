@@ -10,14 +10,7 @@ type Jwt struct {
 
 type JwtData struct {
 	SessionId string
-	Phone     string
 }
-
-type TContextJwtKey string
-
-const (
-	ContextJwtKey TContextJwtKey = "contextJwtKey"
-)
 
 func New(secret string) *Jwt {
 	return &Jwt{
@@ -25,10 +18,9 @@ func New(secret string) *Jwt {
 	}
 }
 
-func (j *Jwt) Create(jwtData *JwtData) (string, error) {
+func (j *Jwt) Create(sessionId string) (string, error) {
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sessionId": jwtData.SessionId,
-		"phone":     jwtData.Phone,
+		"sessionId": sessionId,
 	})
 	s, err := t.SignedString([]byte(j.secret))
 	if err != nil {
@@ -47,9 +39,7 @@ func (j *Jwt) Parse(tokenString string) (bool, *JwtData) {
 	}
 	claims := token.Claims.(jwt.MapClaims)
 	sessionId := claims["sessionId"].(string)
-	phone := claims["phone"].(string)
 	return token.Valid, &JwtData{
 		SessionId: sessionId,
-		Phone:     phone,
 	}
 }

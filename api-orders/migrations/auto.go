@@ -1,7 +1,7 @@
 package main
 
 import (
-	"api-orders/internal/product"
+	"api-orders/internal/models"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -20,5 +20,5 @@ func main() {
 		panic(err)
 	}
 
-	db.AutoMigrate(&product.Product{})
+	db.AutoMigrate(&models.User{}, &models.Product{}, &models.Order{})
 }
