@@ -2,6 +2,7 @@ package main
 
 import (
 	"api-project/internal/link"
+	"api-project/internal/stat"
 	"api-project/internal/user"
 	"os"
 
@@ -21,5 +22,5 @@ func main() {
 		panic(err)
 	}
 
-	db.AutoMigrate(&link.Link{}, &user.User{})
+	db.AutoMigrate(&link.Link{}, &user.User{}, &stat.Stat{})
 }

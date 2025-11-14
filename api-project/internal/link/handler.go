@@ -1,9 +1,12 @@
 package link
 
 import (
+	"api-project/configs"
+	"api-project/pkg/event"
 	"api-project/pkg/middleware"
 	"api-project/pkg/request"
 	"api-project/pkg/response"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -11,18 +14,23 @@ import (
 )
 
 type LinkHandlerDeps struct {
+	Config     *configs.AuthConfig
 	Repository *LinkRepository
+	EventBus   *event.EventBus
 }
 type LinkHandler struct {
 	Repository *LinkRepository
+	EventBus   *event.EventBus
 }
 
 func NewHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 	handler := &LinkHandler{
 		Repository: deps.Repository,
+		EventBus:   deps.EventBus,
 	}
+	router.Handle("GET /links", middleware.IsAuthed(handler.getAll(), deps.Config))
 	router.HandleFunc("POST /links", handler.create())
-	router.Handle("PATCH /links/{id}", middleware.IsAuthed(handler.update()))
+	router.Handle("PATCH /links/{id}", middleware.IsAuthed(handler.update(), deps.Config))
 	router.HandleFunc("DELETE /links/{id}", handler.delete())
 	router.HandleFunc("GET /{hash}", handler.goTo())
 }
@@ -34,7 +42,29 @@ func (handler *LinkHandler) goTo() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
+		go handler.EventBus.Publish(event.Event{
+			Type: event.EventLinkVisited,
+			Data: link.ID,
+		})
 		http.Redirect(w, r, link.Url, http.StatusTemporaryRedirect)
+	}
+}
+func (handler *LinkHandler) getAll() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		limit, err := request.PrepareParam[int](&w, r, "query", "limit", false)
+		if err != nil {
+			return
+		}
+		offset, err := request.PrepareParam[int](&w, r, "query", "offset", false)
+		if err != nil {
+			return
+		}
+		links := handler.Repository.GetAll(limit, offset)
+		count := handler.Repository.Count()
+		response.Json(w, GetAllLinksResponse{
+			Links: links,
+			Count: count,
+		}, http.StatusOK)
 	}
 }
 func (handler *LinkHandler) create() http.HandlerFunc {
@@ -67,15 +97,20 @@ func (handler *LinkHandler) update() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		idString := r.PathValue("id")
-		id, err := strconv.ParseUint(idString, 10, 32)
+		id, err := request.PrepareParam[uint](&w, r, "path", "id", true)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
+		contextEmail, ok := r.Context().Value(middleware.ContextEmailKey).(string)
+		if ok {
+			fmt.Println("update handler contextEmail:", contextEmail)
+		} else {
+			fmt.Println("update handler unknown contextEmail")
+		}
+
 		link, err := handler.Repository.Update(&Link{
-			Model: gorm.Model{ID: uint(id)},
+			Model: gorm.Model{ID: id},
 			Url:   body.Url,
 			Hash:  body.Hash,
 		})

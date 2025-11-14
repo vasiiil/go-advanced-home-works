@@ -1,6 +1,8 @@
 package product
 
 import (
+	"api-orders/configs"
+	"api-orders/pkg/middleware"
 	"api-orders/pkg/request"
 	"api-orders/pkg/response"
 	"fmt"
@@ -11,6 +13,7 @@ import (
 
 type ProductHandlerDeps struct {
 	Repository *ProductRepository
+	AuthConfig *configs.AuthConfig
 }
 type ProductHandler struct {
 	Repository *ProductRepository
@@ -20,11 +23,11 @@ func NewHandler(router *http.ServeMux, deps ProductHandlerDeps) {
 	handler := &ProductHandler{
 		Repository: deps.Repository,
 	}
-	router.HandleFunc("GET /products", handler.get())
-	router.HandleFunc("POST /products", handler.create())
-	router.HandleFunc("GET /products/{id}", handler.getById())
-	router.HandleFunc("PATCH /products/{id}", handler.update())
-	router.HandleFunc("DELETE /products/{id}", handler.delete())
+	router.Handle("GET /products", middleware.IsAuthed(handler.get(), deps.AuthConfig))
+	router.Handle("POST /products", middleware.IsAuthed(handler.create(), deps.AuthConfig))
+	router.Handle("GET /products/{id}", middleware.IsAuthed(handler.getById(), deps.AuthConfig))
+	router.Handle("PATCH /products/{id}", middleware.IsAuthed(handler.update(), deps.AuthConfig))
+	router.Handle("DELETE /products/{id}", middleware.IsAuthed(handler.delete(), deps.AuthConfig))
 }
 func (handler *ProductHandler) get() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

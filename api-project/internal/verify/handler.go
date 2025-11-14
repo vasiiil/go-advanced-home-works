@@ -1,7 +1,6 @@
 package verify
 
 import (
-	"api-project/configs"
 	"api-project/pkg/email"
 	"api-project/pkg/request"
 	"api-project/pkg/response"
@@ -12,10 +11,10 @@ import (
 )
 
 type EmailHandlerDeps struct {
-	Config *configs.EmailConfig
+	EmailSender *email.Email
 }
 type EmailHandler struct {
-	Config *configs.EmailConfig
+	EmailSender *email.Email
 }
 
 var verifyEmailsMap map[string]string
@@ -23,7 +22,7 @@ var verifyEmailsMap map[string]string
 func New(router *http.ServeMux, deps EmailHandlerDeps) {
 	verifyEmailsMap = make(map[string]string)
 	handler := &EmailHandler{
-		Config: deps.Config,
+		EmailSender: deps.EmailSender,
 	}
 	router.HandleFunc("POST /send", handler.send())
 	router.HandleFunc("GET /verify/{hash}", handler.verify())
@@ -40,8 +39,7 @@ func (handler *EmailHandler) send() http.HandlerFunc {
 		verifyEmailsMap[hash] = payload.Email
 
 		text := fmt.Sprintf("<h1>Hello, %s!</h1><p>Please, verify your email %s, following by <a href=\"http://localhost/verify/%s\">link</a></p>", payload.Name, payload.Email, hash)
-		mailer := email.New(handler.Config)
-		err = mailer.Send(handler.Config.Email, "Verifying email", text)
+		err = handler.EmailSender.Send("nikitin-vasya95@yandex.ru", "Verifying email", text)
 		fmt.Println("Hash:", hash)
 		if err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)

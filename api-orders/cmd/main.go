@@ -1,11 +1,12 @@
 package main
 
 import (
-	"api-orders/auth"
 	"api-orders/configs"
+	"api-orders/internal/auth"
 	"api-orders/internal/product"
 	"api-orders/pkg/db"
 	"api-orders/pkg/middleware"
+	"api-orders/pkg/sms"
 	"fmt"
 	"net/http"
 )
@@ -14,6 +15,7 @@ func main() {
 	conf := configs.Load()
 	database := db.New(&conf.Db)
 	router := http.NewServeMux()
+	smsSender := sms.New(&conf.Sms)
 
 	// #region Repositories
 	productRepository := product.NewRepository(database)
@@ -21,7 +23,7 @@ func main() {
 
 	// #region Services
 	authService := auth.NewService(auth.AuthServiceDeps{
-		Sms: &conf.Sms,
+		SmsSender: smsSender,
 	})
 	// #endregion Services
 
@@ -32,6 +34,7 @@ func main() {
 	})
 	product.NewHandler(router, product.ProductHandlerDeps{
 		Repository: productRepository,
+		AuthConfig: &conf.Auth,
 	})
 	// #endregion Handlers
 
