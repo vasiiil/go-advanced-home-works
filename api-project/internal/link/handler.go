@@ -2,6 +2,7 @@ package link
 
 import (
 	"api-project/configs"
+	"api-project/pkg/event"
 	"api-project/pkg/middleware"
 	"api-project/pkg/request"
 	"api-project/pkg/response"
@@ -13,17 +14,21 @@ import (
 )
 
 type LinkHandlerDeps struct {
-	Repository *LinkRepository
 	Config     *configs.AuthConfig
+	Repository *LinkRepository
+	EventBus   *event.EventBus
 }
 type LinkHandler struct {
 	Repository *LinkRepository
+	EventBus   *event.EventBus
 }
 
 func NewHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 	handler := &LinkHandler{
 		Repository: deps.Repository,
+		EventBus:   deps.EventBus,
 	}
+	router.Handle("GET /links", middleware.IsAuthed(handler.getAll(), deps.Config))
 	router.HandleFunc("POST /links", handler.create())
 	router.Handle("PATCH /links/{id}", middleware.IsAuthed(handler.update(), deps.Config))
 	router.HandleFunc("DELETE /links/{id}", handler.delete())
@@ -37,7 +42,29 @@ func (handler *LinkHandler) goTo() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
+		go handler.EventBus.Publish(event.Event{
+			Type: event.EventLinkVisited,
+			Data: link.ID,
+		})
 		http.Redirect(w, r, link.Url, http.StatusTemporaryRedirect)
+	}
+}
+func (handler *LinkHandler) getAll() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		limit, err := request.PrepareParam[int](&w, r, "query", "limit", false)
+		if err != nil {
+			return
+		}
+		offset, err := request.PrepareParam[int](&w, r, "query", "offset", false)
+		if err != nil {
+			return
+		}
+		links := handler.Repository.GetAll(limit, offset)
+		count := handler.Repository.Count()
+		response.Json(w, GetAllLinksResponse{
+			Links: links,
+			Count: count,
+		}, http.StatusOK)
 	}
 }
 func (handler *LinkHandler) create() http.HandlerFunc {

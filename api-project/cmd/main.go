@@ -4,10 +4,12 @@ import (
 	"api-project/configs"
 	"api-project/internal/auth"
 	"api-project/internal/link"
+	"api-project/internal/stat"
 	"api-project/internal/user"
 	"api-project/internal/verify"
 	"api-project/pkg/db"
 	"api-project/pkg/email"
+	"api-project/pkg/event"
 	"api-project/pkg/middleware"
 	"fmt"
 	"net/http"
@@ -18,14 +20,20 @@ func main() {
 	database := db.New(&conf.Db)
 	router := http.NewServeMux()
 	emailSender := email.New(&conf.Email)
+	eventBus := event.NewEventBus()
 
 	// #region Repositories
 	linkRepository := link.NewRepository(database)
 	userRepository := user.NewRepository(database)
+	statRepository := stat.NewRepository(database)
 	// #endregion Repositories
 
 	// #region Services
 	authService := auth.NewService(userRepository)
+	statService := stat.NewService(&stat.StatServiceDeps{
+		EventBus:       eventBus,
+		StatRepository: statRepository,
+	})
 	// #endregion Services
 
 	// #region Handlers
@@ -34,8 +42,13 @@ func main() {
 		Service: authService,
 	})
 	link.NewHandler(router, link.LinkHandlerDeps{
-		Repository: linkRepository,
 		Config:     &conf.Auth,
+		Repository: linkRepository,
+		EventBus:   eventBus,
+	})
+	stat.NewHandler(router, stat.StatHandlerDeps{
+		Config:     &conf.Auth,
+		Repository: statRepository,
 	})
 	// #endregion Handlers
 
@@ -53,6 +66,9 @@ func main() {
 		Addr:    ":8081",
 		Handler: stackMiddleware(router),
 	}
+
+	go statService.AddClick()
+
 	fmt.Println("Server is listening on port 8081")
 	server.ListenAndServe()
 }
