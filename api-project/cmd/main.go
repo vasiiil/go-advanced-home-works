@@ -15,7 +15,7 @@ import (
 	"net/http"
 )
 
-func main() {
+func App() http.Handler {
 	conf := configs.Load()
 	database := db.New(&conf.Db)
 	router := http.NewServeMux()
@@ -35,6 +35,8 @@ func main() {
 		StatRepository: statRepository,
 	})
 	// #endregion Services
+
+	go statService.AddClick()
 
 	// #region Handlers
 	auth.NewHandler(router, auth.AuthHandlerDeps{
@@ -62,12 +64,15 @@ func main() {
 	verify.New(router, verify.EmailHandlerDeps{
 		EmailSender: emailSender,
 	})
+	return stackMiddleware(router)
+}
+
+func main() {
+	app := App()
 	server := http.Server{
 		Addr:    ":8081",
-		Handler: stackMiddleware(router),
+		Handler: app,
 	}
-
-	go statService.AddClick()
 
 	fmt.Println("Server is listening on port 8081")
 	server.ListenAndServe()

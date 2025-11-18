@@ -2,16 +2,17 @@ package auth
 
 import (
 	"api-project/internal/user"
+	"api-project/pkg/di"
 	"errors"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {
-	UserRepository *user.UserRepository
+	UserRepository di.IUserRepository
 }
 
-func NewService(userRepository *user.UserRepository) *AuthService {
+func NewService(userRepository di.IUserRepository) *AuthService {
 	return &AuthService{
 		UserRepository: userRepository,
 	}

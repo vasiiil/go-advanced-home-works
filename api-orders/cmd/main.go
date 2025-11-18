@@ -13,7 +13,7 @@ import (
 	"net/http"
 )
 
-func main() {
+func App() http.Handler {
 	conf := configs.Load()
 	database := db.New(&conf.Db)
 	router := http.NewServeMux()
@@ -53,10 +53,15 @@ func main() {
 	stackMiddleware := middleware.Chain(
 		middleware.Logging,
 	)
+	return stackMiddleware(router)
+}
+
+func main() {
+	app := App()
 
 	server := http.Server{
 		Addr:    ":8081",
-		Handler: stackMiddleware(router),
+		Handler: app,
 	}
 	fmt.Println("Server is listening on port 8081")
 	server.ListenAndServe()
