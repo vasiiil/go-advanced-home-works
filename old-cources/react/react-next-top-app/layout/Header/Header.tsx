@@ -4,7 +4,6 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { HeaderProps } from "./Header.props";
 import Logo from "../logo.svg";
 import { ButtonIcon } from '@/components/ButtonIcon/ButtonIcon';
-import { Sidebar } from '../Sidebar/Sidebar';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
@@ -40,7 +39,6 @@ export const Header = ({ className, ...props }: HeaderProps): JSX.Element => {
 				initial="closed"
 				animate={isOpened ? 'opened' : 'closed'}
 			>
-				<Sidebar />
 				<ButtonIcon className={styles['menu-close']} appearance='white' icon='close' onClick={() => setIsOpened(false)} />
 			</motion.div>
 		</header>

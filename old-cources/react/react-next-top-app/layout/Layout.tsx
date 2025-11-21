@@ -1,10 +1,8 @@
 import { FunctionComponent, KeyboardEvent, useRef, useState } from "react";
-import { AppContextProvider, IAppContext } from "../context/app.context";
 import { Footer } from "./Footer/Footer";
 import { Header } from "./Header/Header";
 import styles from "./Layout.module.css";
 import { LayoutProps } from "./Layout.props";
-import { Sidebar } from "./Sidebar/Sidebar";
 import cn from "classnames";
 
 const Layout = ({ children }: LayoutProps): JSX.Element => {
@@ -31,7 +29,6 @@ const Layout = ({ children }: LayoutProps): JSX.Element => {
 				})}
 			>Сразу к содержанию</a>
 			<Header className={styles.header} />
-			<Sidebar className={styles.sidebar} />
 			<main ref={bodyRef} tabIndex={0} className={styles.body} role='main'>
 				{children}
 			</main>
@@ -40,14 +37,12 @@ const Layout = ({ children }: LayoutProps): JSX.Element => {
 	);
 };
 
-export const withLayout = <T extends Record<string, unknown> & IAppContext>(Component: FunctionComponent<T>) => {
+export const withLayout = <T extends Record<string, unknown>>(Component: FunctionComponent<T>) => {
 	return function withLayoutComponent(props: T): JSX.Element {
 		return (
-			<AppContextProvider menu={props.menu} firstCategory={props.firstCategory}>
 				<Layout>
 					<Component {...props} />
 				</Layout>
-			</AppContextProvider>
 		);
 	};
 };
