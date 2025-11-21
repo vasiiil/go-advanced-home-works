@@ -2,21 +2,11 @@ export enum TopLevelCategory {
 	Courses,
 	Services,
 	Books,
-	Products
 }
 
 export interface ITopPageAdvantage {
 	title: string;
 	description: string;
-	_id: string;
-}
-
-export interface IHhData {
-	count: number;
-	juniorSalary: number;
-	middleSalary: number;
-	seniorSalary: number;
-	updatedAt: Date;
 	_id: string;
 }
 
@@ -54,11 +44,9 @@ export interface ITopPageModel {
 	metaTitle: string;
 	metaDescription: string;
 	firstCategory: TopLevelCategory;
-	advantages?: ITopPageAdvantage[];
 	createdAt: Date;
 	updatedAt: Date;
 	__v: number;
-	hh?: IHhData;
 	qas: any[];
 	addresses: any[];
 	categoryOn: string;

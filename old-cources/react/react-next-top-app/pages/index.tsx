@@ -1,15 +1,13 @@
 import { GetStaticProps } from "next";
 import { useEffect, useState } from "react";
-import { Htag, Button, Ptag, Tag, Rating, Input, Textarea } from "../components";
+import { Htag, Button, Ptag, Tag, Input, Textarea } from "../components";
 import { withLayout } from "../layout/Layout";
 import axios from "axios";
 import { IMenuItem } from "../interfaces/menu.interface";
 import { API } from '@/helpers/api';
-import Error from 'next/error';
 
 function Home(): JSX.Element {
 	const [counter, setCounter] = useState(0);
-	const [rating, setRating] = useState<number>(3);
 
 	useEffect(() => {
 		console.log('Counter: ' + counter);
@@ -30,7 +28,6 @@ function Home(): JSX.Element {
 			<Tag color="red">M Red</Tag>
 			<Tag size="s" color="green">S green</Tag>
 			<Tag size="m" color="primary">M primary</Tag>
-			<Rating rating={rating} isEditable={true} setRating={setRating} />
 			<Input placeholder="test" />
 			<Textarea placeholder="textarea placeholder" />
 		</>

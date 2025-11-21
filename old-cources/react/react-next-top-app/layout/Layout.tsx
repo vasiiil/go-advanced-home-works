@@ -5,7 +5,6 @@ import { Header } from "./Header/Header";
 import styles from "./Layout.module.css";
 import { LayoutProps } from "./Layout.props";
 import { Sidebar } from "./Sidebar/Sidebar";
-import { Up } from '@/components';
 import cn from "classnames";
 
 const Layout = ({ children }: LayoutProps): JSX.Element => {
@@ -37,7 +36,6 @@ const Layout = ({ children }: LayoutProps): JSX.Element => {
 				{children}
 			</main>
 			<Footer className={styles.footer} />
-			<Up />
 		</div>
 	);
 };
